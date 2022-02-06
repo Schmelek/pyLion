@@ -1,0 +1,154 @@
+LAMMPS (7 Jan 2022)
+OMP_NUM_THREADS environment is not set. Defaulting to 1 thread. (src/comm.cpp:98)
+  using 1 OpenMP thread(s) per MPI task
+##################################################################
+# LAMMPS input file generated using pylion 0.5.2
+# simulation name: normal_modes
+#
+# pylion is written and maintained by Dimitris Trypogeorgos
+# and Elliot Bentine. Download it from
+# https://bitbucket.org/dtrypogeorgos/pylion
+#
+# If you find it useful please cite <paper>.
+##################################################################
+
+
+units si
+atom_style charge
+
+# Creating simulation box...
+boundary m m m
+region simulationDomain block -0.001  0.001 -0.001 0.001 -0.001 0.001 units box
+create_box 1 simulationDomain
+Created orthogonal box = (-0.001 -0.001 -0.001) to (0.001 0.001 0.001)
+  1 by 1 by 1 MPI processor grid
+
+# Configure neighbour list...
+neighbor 1 nsq
+neigh_modify once yes
+
+# Configure pairwise interactions for long range Coulombics only...
+pair_style coul/cut 10
+pair_coeff * *
+
+# Placing individual ions...
+create_atoms 1 single -3.4022891108931416e-08 4.9828504407469775e-08 -2.5e-05 units box
+Created 1 atoms
+  using box units in orthogonal box = (-0.001 -0.001 -0.001) to (0.001 0.001 0.001)
+  create_atoms CPU = 0.000 seconds
+create_atoms 1 single 4.784435563822131e-08 -3.008483476754733e-07 -1.25e-05 units box
+Created 1 atoms
+  using box units in orthogonal box = (-0.001 -0.001 -0.001) to (0.001 0.001 0.001)
+  create_atoms CPU = 0.000 seconds
+create_atoms 1 single 7.392445609439491e-08 1.9452231405592577e-07 0.0 units box
+Created 1 atoms
+  using box units in orthogonal box = (-0.001 -0.001 -0.001) to (0.001 0.001 0.001)
+  create_atoms CPU = 0.000 seconds
+create_atoms 1 single 2.660628383143808e-07 2.549490837987336e-07 1.25e-05 units box
+Created 1 atoms
+  using box units in orthogonal box = (-0.001 -0.001 -0.001) to (0.001 0.001 0.001)
+  create_atoms CPU = 0.000 seconds
+create_atoms 1 single -4.03246413618491e-07 -3.5716071522810253e-07 2.5e-05 units box
+Created 1 atoms
+  using box units in orthogonal box = (-0.001 -0.001 -0.001) to (0.001 0.001 0.001)
+  create_atoms CPU = 0.000 seconds
+
+# Species...
+mass 1 2.83952169e-25
+set type 1 charge 1.6021764599999998e-19
+Setting atom values ...
+  5 settings made for charge
+group 1 type 1
+5 atoms in group 1
+
+timestep 5.190930493070496e-09
+
+# Configuring additional output to flush buffer during simulation...
+thermo 10000
+thermo_style custom step cpu
+thermo_modify flush yes
+
+# Time integration...
+group nonRigidBody union all
+5 atoms in group nonRigidBody
+fix timeIntegrator nonRigidBody nve
+
+
+# Pseudopotential approximation for Linear Paul trap... (fixID=8438005611840)
+
+# SHO
+variable k_x8438005611840		equal 1.053450e-10
+variable k_y8438005611840		equal 1.053450e-10
+variable k_z8438005611840		equal 8.160975e-13
+variable fX8438005611840 atom "-v_k_x8438005611840 * x"
+variable fY8438005611840 atom "-v_k_y8438005611840 * y"
+variable fZ8438005611840 atom "-v_k_z8438005611840 * z"
+variable E8438005611840 atom "v_k_x8438005611840 * x * x / 2 + v_k_y8438005611840 * y * y / 2 + v_k_z8438005611840 * z * z / 2"
+fix 8438005611840 1 addforce v_fX8438005611840 v_fY8438005611840 v_fZ8438005611840 energy v_E8438005611840
+
+
+# Adding a langevin bath...
+fix 8438059234880 all langevin 0.000000e+00 0.000000e+00 3.000000e-06 1337
+
+dump 5625438991680 all custom 100 positions.txt id id mass q x y z
+
+
+# Run simulation
+run 100000
+  generated 0 of 0 mixed pair_coeff terms from geometric mixing rule
+Neighbor list info ...
+  update every 1 steps, delay 10 steps, check yes
+  max neighbors/atom: 2000, page size: 100000
+  master list distance cutoff = 11
+  ghost atom cutoff = 11
+  1 neighbor lists, perpetual/occasional/extra = 1 0 0
+  (1) pair coul/cut, perpetual
+      attributes: half, newton on
+      pair build: half/nsq/newton
+      stencil: none
+      bin: none
+WARNING: Proc sub-domain size < neighbor skin, could lead to lost atoms (src/domain.cpp:965)
+Per MPI rank memory allocation (min/avg/max) = 4.78 | 4.78 | 4.78 Mbytes
+Step CPU 
+       0            0 
+   10000     0.250159 
+   20000      0.49265 
+   30000     0.720868 
+   40000     0.947152 
+   50000     1.170198 
+   60000     1.434058 
+   70000     1.681878 
+   80000     1.905792 
+   90000      2.12963 
+  100000      2.37124 
+Loop time of 2.37134 on 1 procs for 100000 steps with 5 atoms
+
+98.8% CPU use with 1 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 0.030898   | 0.030898   | 0.030898   |   0.0 |  1.30
+Neigh   | 0          | 0          | 0          |   0.0 |  0.00
+Comm    | 0.016425   | 0.016425   | 0.016425   |   0.0 |  0.69
+Output  | 0.044721   | 0.044721   | 0.044721   |   0.0 |  1.89
+Modify  | 2.2484     | 2.2484     | 2.2484     |   0.0 | 94.82
+Other   |            | 0.03086    |            |       |  1.30
+
+Nlocal:              5 ave           5 max           5 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:              0 ave           0 max           0 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:             10 ave          10 max          10 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 10
+Ave neighs/atom = 2
+Neighbor list builds = 0
+Dangerous builds = 0
+
+
+# Deleting a fix
+unfix 8438059234880
+
+Total wall time: 0:00:02

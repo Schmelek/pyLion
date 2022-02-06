@@ -1,3 +1,4 @@
+from dis import disco
 from webbrowser import get
 from jinja2.sandbox import F
 from numpy.core.fromnumeric import argmax
@@ -7,10 +8,8 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 import get_modes
-from sympy.utilities.iterables import multiset_permutations
-import scipy.integrate as integrate
 from scipy.optimize import fsolve
-from numpy import sin as sin
+from numpy import complex128, sin as sin
 from numpy import cos as cos
 
 
@@ -94,9 +93,10 @@ l = ((1 * ech) ** 2 / (171 * amu * 4 * np.pi * eps0 * (w_z * 2 * np.pi) ** 2)) *
 
 radial_freqs = radial_freqs[::-1] * w_z * 2 * np.pi
 radial_modes = -radial_modes[::-1, :]
+
 S = 2 * ion_number + 1
-offset = 3.01e6 * 2 * np.pi
-tau = 235e-6
+offset = 19260000
+tau = 240e-6
 C1 = np.zeros((ion_number, S), dtype=np.complex128)
 C2 = np.zeros((ion_number, S), dtype=np.complex128)
 
@@ -123,16 +123,22 @@ for i in range(ion_number):
         t2 = (j + 1) * tau / S
         w = radial_freqs[i]
         C1[i, j] = (
-            -offset * cos(offset * t1) * cos(t1 * w) / (-(offset ** 2) + w ** 2)
-            + offset * cos(offset * t2) * cos(t2 * w) / (-(offset ** 2) + w ** 2)
+            -offset * cos(offset * t1) * cos(t1 * w) /
+            (-(offset ** 2) + w ** 2)
+            + offset * cos(offset * t2) * cos(t2 * w) /
+            (-(offset ** 2) + w ** 2)
             - w * sin(offset * t1) * sin(t1 * w) / (-(offset ** 2) + w ** 2)
             + w * sin(offset * t2) * sin(t2 * w) / (-(offset ** 2) + w ** 2)
             + 1j
             * (
-                -offset * sin(t1 * w) * cos(offset * t1) / (-(offset ** 2) + w ** 2)
-                + offset * sin(t2 * w) * cos(offset * t2) / (-(offset ** 2) + w ** 2)
-                + w * sin(offset * t1) * cos(t1 * w) / (-(offset ** 2) + w ** 2)
-                - w * sin(offset * t2) * cos(t2 * w) / (-(offset ** 2) + w ** 2)
+                -offset * sin(t1 * w) * cos(offset * t1) /
+                (-(offset ** 2) + w ** 2)
+                + offset * sin(t2 * w) * cos(offset * t2) /
+                (-(offset ** 2) + w ** 2)
+                + w * sin(offset * t1) * cos(t1 * w) /
+                (-(offset ** 2) + w ** 2)
+                - w * sin(offset * t2) * cos(t2 * w) /
+                (-(offset ** 2) + w ** 2)
             )
         ) * LD_parameter[i, 0]
 
@@ -157,7 +163,8 @@ for n in range(S):
         t2 = (n + 1) * tau / S
         t1p = m * tau / S
         t2p = (m + 1) * tau / S
-        tmp = lambda w: (
+
+        def tmp(w): return (
             -(offset ** 2)
             * sin(t1 * w)
             * cos(offset * t1)
@@ -378,7 +385,8 @@ for n in range(S):
     t1p = n * tau / S
     t2p = (n + 1) * tau / S
     t1 = n * tau / S
-    tmp = lambda w: (
+
+    def tmp(w): return (
         -(offset ** 2)
         * sin(t1 * w)
         * cos(offset * t1)
@@ -503,7 +511,8 @@ def equations(omega):
 
 omega = fsolve(equations, np.arange(S))
 if np.dot(omega, (np.dot(Dij, omega))) < 0:
-    omega = omega * (-np.pi * 7 / (4 * np.dot(omega, (np.dot(Dij, omega))))) ** 0.5
+    omega = omega * \
+        (-np.pi * 7 / (4 * np.dot(omega, (np.dot(Dij, omega))))) ** 0.5
 else:
     omega = omega * (np.pi / (4 * np.dot(omega, (np.dot(Dij, omega))))) ** 0.5
 print(omega)
@@ -514,16 +523,18 @@ plt.grid()
 plt.show()
 
 
-omega_function = lambda t: np.piecewise(
-    t, [((i * tau / S <= t) & (t < (i + 1) * tau / S)) for i in range(S)], omega
+def omega_function(t): return np.piecewise(
+    t, [((i * tau / S <= t) & (t < (i + 1) * tau / S))
+        for i in range(S)], omega
 )
 
 # choose the mode alpha coefficient you would like to observe for
 
+
 time = np.arange(0, tau, tau / 10000)
 
 
-def Alpha_function_real(t, C_index):
+def Alpha_function_real_1(t, C_index):
     w = radial_freqs[C_index]
     for i in range(S):
         if i * tau / S <= t:
@@ -532,17 +543,20 @@ def Alpha_function_real(t, C_index):
                 return sum(
                     C1.real[C_index, j] * omega[j] for j in range(i)
                 ) + omega_function(t) * LD_parameter[C_index, 0] * (
-                    offset * cos(offset * t) * cos(t * w) / (-(offset ** 2) + w ** 2)
+                    offset * cos(offset * t) * cos(t * w) /
+                    (-(offset ** 2) + w ** 2)
                     - offset
                     * cos(offset * t1)
                     * cos(t1 * w)
                     / (-(offset ** 2) + w ** 2)
-                    + w * sin(offset * t) * sin(t * w) / (-(offset ** 2) + w ** 2)
-                    - w * sin(offset * t1) * sin(t1 * w) / (-(offset ** 2) + w ** 2)
+                    + w * sin(offset * t) * sin(t * w) /
+                    (-(offset ** 2) + w ** 2)
+                    - w * sin(offset * t1) * sin(t1 * w) /
+                    (-(offset ** 2) + w ** 2)
                 )
 
 
-def Alpha_function_imag(t, C_index):
+def Alpha_function_imag_1(t, C_index):
     w = radial_freqs[C_index]
     for i in range(S):
         if t >= i * tau / S:
@@ -551,24 +565,29 @@ def Alpha_function_imag(t, C_index):
                 return sum(
                     C1.imag[C_index, j] * omega[j] for j in range(i)
                 ) + omega_function(t) * LD_parameter[C_index, 0] * (
-                    offset * sin(t * w) * cos(offset * t) / (-(offset ** 2) + w ** 2)
+                    offset * sin(t * w) * cos(offset * t) /
+                    (-(offset ** 2) + w ** 2)
                     - offset
                     * sin(t1 * w)
                     * cos(offset * t1)
                     / (-(offset ** 2) + w ** 2)
-                    - w * sin(offset * t) * cos(t * w) / (-(offset ** 2) + w ** 2)
-                    + w * sin(offset * t1) * cos(t1 * w) / (-(offset ** 2) + w ** 2)
+                    - w * sin(offset * t) * cos(t * w) /
+                    (-(offset ** 2) + w ** 2)
+                    + w * sin(offset * t1) * cos(t1 * w) /
+                    (-(offset ** 2) + w ** 2)
                 )
 
 
 fig = plt.figure()
 
-for i in np.arange(1, 6, 1):
+for i in np.arange(1, ion_number+1, 1):
     Alpha_array_imag = 0
     Alpha_array_real = 0
     for t in time:
-        Alpha_array_real = np.append(Alpha_array_real, Alpha_function_real(t, i - 1))
-        Alpha_array_imag = np.append(Alpha_array_imag, Alpha_function_imag(t, i - 1))
+        Alpha_array_real = np.append(
+            Alpha_array_real, Alpha_function_real_1(t, i - 1))
+        Alpha_array_imag = np.append(
+            Alpha_array_imag, Alpha_function_imag_1(t, i - 1))
     axs = fig.add_subplot(2, 3, i)
     axs.plot(Alpha_array_real, Alpha_array_imag)
     # axs.set_xlabel("Alpha real")
@@ -582,6 +601,248 @@ plt.ylabel("mode number")
 plt.show()
 
 print(Dij)
-print(Alpha_function_real(0.999999 * tau, 0), Alpha_function_imag(0.999999 * tau, 0))
+print(Alpha_function_real_1(tau, 0),
+      Alpha_function_imag_1(tau, 0))
 print(sum(C_matrix[:, i] * omega[i] for i in range(S)))
 
+print(radial_freqs, offset)
+N = ion_number - 1
+P = 2*N+1
+excluded_mode = np.argsort(np.abs(radial_freqs-offset))[-(ion_number-P):]
+print(np.argsort(np.abs(radial_freqs-offset))[-(ion_number-P):])
+
+C_excluding_modes = np.zeros((N, P), dtype=complex128)
+D_excluding_modes = np.zeros((P, P))
+for i in range(N):
+    for j in range(P):
+        t1 = j * tau / P
+        t2 = (j + 1) * tau / P
+        w = radial_freqs[i]
+        C_excluding_modes[i, j] = (
+            -offset * cos(offset * t1) * cos(t1 * w) /
+            (-(offset ** 2) + w ** 2)
+            + offset * cos(offset * t2) * cos(t2 * w) /
+            (-(offset ** 2) + w ** 2)
+            - w * sin(offset * t1) * sin(t1 * w) / (-(offset ** 2) + w ** 2)
+            + w * sin(offset * t2) * sin(t2 * w) / (-(offset ** 2) + w ** 2)
+            + 1j
+            * (
+                -offset * sin(t1 * w) * cos(offset * t1) /
+                (-(offset ** 2) + w ** 2)
+                + offset * sin(t2 * w) * cos(offset * t2) /
+                (-(offset ** 2) + w ** 2)
+                + w * sin(offset * t1) * cos(t1 * w) /
+                (-(offset ** 2) + w ** 2)
+                - w * sin(offset * t2) * cos(t2 * w) /
+                (-(offset ** 2) + w ** 2)
+            )
+        ) * LD_parameter[i, 0]
+considered_modes = np.delete(np.arange(ion_number), excluded_mode)
+for n in range(P):
+    t1p = n * tau / P
+    t2p = (n + 1) * tau / P
+    t1 = n * tau / P
+
+    def tmp(w): return (
+        -(offset ** 2)
+        * sin(t1 * w)
+        * cos(offset * t1)
+        * cos(offset * t1p)
+        * cos(t1p * w)
+        / (offset ** 4 - 2 * offset ** 2 * w ** 2 + w ** 4)
+        + offset ** 2
+        * sin(t1 * w)
+        * cos(offset * t1)
+        * cos(offset * t2p)
+        * cos(t2p * w)
+        / (offset ** 4 - 2 * offset ** 2 * w ** 2 + w ** 4)
+        + offset ** 2
+        * sin(t1p * w)
+        * cos(offset * t1)
+        * cos(offset * t1p)
+        * cos(t1 * w)
+        / (offset ** 4 - 2 * offset ** 2 * w ** 2 + w ** 4)
+        - offset ** 2
+        * sin(t2p * w)
+        * cos(offset * t1)
+        * cos(offset * t2p)
+        * cos(t1 * w)
+        / (offset ** 4 - 2 * offset ** 2 * w ** 2 + w ** 4)
+        + offset
+        * w
+        * sin(offset * t1)
+        * sin(t1 * w)
+        * sin(t1p * w)
+        * cos(offset * t1p)
+        / (offset ** 4 - 2 * offset ** 2 * w ** 2 + w ** 4)
+        - offset
+        * w
+        * sin(offset * t1)
+        * sin(t1 * w)
+        * sin(t2p * w)
+        * cos(offset * t2p)
+        / (offset ** 4 - 2 * offset ** 2 * w ** 2 + w ** 4)
+        + offset
+        * w
+        * sin(offset * t1)
+        * cos(offset * t1p)
+        * cos(t1 * w)
+        * cos(t1p * w)
+        / (offset ** 4 - 2 * offset ** 2 * w ** 2 + w ** 4)
+        - offset
+        * w
+        * sin(offset * t1)
+        * cos(offset * t2p)
+        * cos(t1 * w)
+        * cos(t2p * w)
+        / (offset ** 4 - 2 * offset ** 2 * w ** 2 + w ** 4)
+        - offset
+        * w
+        * sin(offset * t1p)
+        * sin(t1 * w)
+        * sin(t1p * w)
+        * cos(offset * t1)
+        / (offset ** 4 - 2 * offset ** 2 * w ** 2 + w ** 4)
+        - offset
+        * w
+        * sin(offset * t1p)
+        * cos(offset * t1)
+        * cos(t1 * w)
+        * cos(t1p * w)
+        / (offset ** 4 - 2 * offset ** 2 * w ** 2 + w ** 4)
+        + offset
+        * w
+        * sin(offset * t2p)
+        * sin(t1 * w)
+        * sin(t2p * w)
+        * cos(offset * t1)
+        / (offset ** 4 - 2 * offset ** 2 * w ** 2 + w ** 4)
+        + offset
+        * w
+        * sin(offset * t2p)
+        * cos(offset * t1)
+        * cos(t1 * w)
+        * cos(t2p * w)
+        / (offset ** 4 - 2 * offset ** 2 * w ** 2 + w ** 4)
+        - w ** 2
+        * sin(offset * t1)
+        * sin(offset * t1p)
+        * sin(t1 * w)
+        * cos(t1p * w)
+        / (offset ** 4 - 2 * offset ** 2 * w ** 2 + w ** 4)
+        + w ** 2
+        * sin(offset * t1)
+        * sin(offset * t1p)
+        * sin(t1p * w)
+        * cos(t1 * w)
+        / (offset ** 4 - 2 * offset ** 2 * w ** 2 + w ** 4)
+        + w ** 2
+        * sin(offset * t1)
+        * sin(offset * t2p)
+        * sin(t1 * w)
+        * cos(t2p * w)
+        / (offset ** 4 - 2 * offset ** 2 * w ** 2 + w ** 4)
+        - w ** 2
+        * sin(offset * t1)
+        * sin(offset * t2p)
+        * sin(t2p * w)
+        * cos(t1 * w)
+        / (offset ** 4 - 2 * offset ** 2 * w ** 2 + w ** 4)
+    )
+    D_excluding_modes[n, n] = sum(
+        LD_parameter[a, 0] * LD_parameter[a, 1] * tmp(radial_freqs[a])
+        for a in considered_modes)
+
+C_matrix = np.vstack([C_excluding_modes.real, C_excluding_modes.imag])
+print(np.shape(C_matrix))
+
+
+def equations(omega1):
+    omega1 = np.array(omega1)
+    out = np.concatenate(
+        (np.dot(C_matrix, omega1), np.dot(omega1, omega1) - 1), axis=None,
+    )
+    return out.T
+
+
+omega = fsolve(equations, np.arange(P))
+if np.dot(omega, (np.dot(D_excluding_modes, omega))) < 0:
+    omega = omega * \
+        (-np.pi * 7 / (4 * np.dot(omega, (np.dot(D_excluding_modes, omega))))) ** 0.5
+else:
+    omega = omega * \
+        (np.pi / (4 * np.dot(omega, (np.dot(D_excluding_modes, omega))))) ** 0.5
+print(omega)
+
+
+def omega_function(t): return np.piecewise(
+    t, [((i * tau / P <= t) & (t < (i + 1) * tau / P))
+        for i in range(P)], omega
+)
+
+
+def Alpha_function_real_1_excluding_modes(t, mode):
+    w = radial_freqs[mode]
+    for i in range(P):
+        if i * tau / P <= t:
+            if t < (i + 1) * tau / P:
+                t1 = i * tau / P
+                return sum(
+                    C_excluding_modes.real[mode, j] * omega[j] for j in range(i)
+                ) + omega_function(t) * LD_parameter[mode, 0] * (
+                    offset * cos(offset * t) * cos(t * w) /
+                    (-(offset ** 2) + w ** 2)
+                    - offset
+                    * cos(offset * t1)
+                    * cos(t1 * w)
+                    / (-(offset ** 2) + w ** 2)
+                    + w * sin(offset * t) * sin(t * w) /
+                    (-(offset ** 2) + w ** 2)
+                    - w * sin(offset * t1) * sin(t1 * w) /
+                    (-(offset ** 2) + w ** 2)
+                )
+
+
+def Alpha_function_imag_1_excluding_modes(t, mode):
+    w = radial_freqs[mode]
+    for i in range(P):
+        if t >= i * tau / P:
+            if t < (i + 1) * tau / P:
+                t1 = i * tau / P
+                return sum(
+                    C_excluding_modes.imag[mode, j] * omega[j] for j in range(i)
+                ) + omega_function(t) * LD_parameter[mode, 0] * (
+                    offset * sin(t * w) * cos(offset * t) /
+                    (-(offset ** 2) + w ** 2)
+                    - offset
+                    * sin(t1 * w)
+                    * cos(offset * t1)
+                    / (-(offset ** 2) + w ** 2)
+                    - w * sin(offset * t) * cos(t * w) /
+                    (-(offset ** 2) + w ** 2)
+                    + w * sin(offset * t1) * cos(t1 * w) /
+                    (-(offset ** 2) + w ** 2)
+                )
+
+
+fig = plt.figure()
+
+for i in np.arange(1, ion_number+1, 1):
+    Alpha_array_imag = 0
+    Alpha_array_real = 0
+    for t in time:
+        Alpha_array_real = np.append(
+            Alpha_array_real, Alpha_function_real_1_excluding_modes(t, i - 1))
+        Alpha_array_imag = np.append(
+            Alpha_array_imag, Alpha_function_imag_1_excluding_modes(t, i - 1))
+    axs = fig.add_subplot(2, 3, i)
+    axs.plot(Alpha_array_real, Alpha_array_imag)
+    # axs.set_xlabel("Alpha real")
+    # axs.set_ylabel("Alpha imaginary")
+    axs.grid(True)
+axmd = fig.add_subplot(2, 3, 6)
+plt.imshow(radial_modes, cmap="bwr", vmin=-1, vmax=1)
+plt.colorbar()
+plt.xlabel("ion number")
+plt.ylabel("mode number")
+plt.show()

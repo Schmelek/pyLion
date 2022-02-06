@@ -1,0 +1,78 @@
+##################################################################
+# LAMMPS input file generated using pylion 0.5.2
+# simulation name: normal_modes
+#
+# pylion is written and maintained by Dimitris Trypogeorgos
+# and Elliot Bentine. Download it from
+# https://bitbucket.org/dtrypogeorgos/pylion
+#
+# If you find it useful please cite <paper>.
+##################################################################
+
+
+units si
+atom_style charge
+
+# Creating simulation box...
+boundary m m m
+region simulationDomain block -0.001  0.001 -0.001 0.001 -0.001 0.001 units box
+create_box 1 simulationDomain
+
+# Configure neighbour list...
+neighbor 1 nsq
+neigh_modify once yes
+
+# Configure pairwise interactions for long range Coulombics only...
+pair_style coul/cut 10
+pair_coeff * *
+
+# Placing individual ions...
+create_atoms 1 single -3.4022891108931416e-08 4.9828504407469775e-08 -2.5e-05 units box
+create_atoms 1 single 4.784435563822131e-08 -3.008483476754733e-07 -1.25e-05 units box
+create_atoms 1 single 7.392445609439491e-08 1.9452231405592577e-07 0.0 units box
+create_atoms 1 single 2.660628383143808e-07 2.549490837987336e-07 1.25e-05 units box
+create_atoms 1 single -4.03246413618491e-07 -3.5716071522810253e-07 2.5e-05 units box
+
+# Species...
+mass 1 2.83952169e-25
+set type 1 charge 1.6021764599999998e-19
+group 1 type 1
+
+timestep 5.190930493070496e-09
+
+# Configuring additional output to flush buffer during simulation...
+thermo 10000
+thermo_style custom step cpu
+thermo_modify flush yes
+
+# Time integration...
+group nonRigidBody union all
+fix timeIntegrator nonRigidBody nve
+
+
+# Pseudopotential approximation for Linear Paul trap... (fixID=8438005611840)
+
+# SHO
+variable k_x8438005611840		equal 1.053450e-10
+variable k_y8438005611840		equal 1.053450e-10
+variable k_z8438005611840		equal 8.160975e-13
+variable fX8438005611840 atom "-v_k_x8438005611840 * x"
+variable fY8438005611840 atom "-v_k_y8438005611840 * y"
+variable fZ8438005611840 atom "-v_k_z8438005611840 * z"
+variable E8438005611840 atom "v_k_x8438005611840 * x * x / 2 + v_k_y8438005611840 * y * y / 2 + v_k_z8438005611840 * z * z / 2"
+fix 8438005611840 1 addforce v_fX8438005611840 v_fY8438005611840 v_fZ8438005611840 energy v_E8438005611840
+
+
+# Adding a langevin bath...
+fix 8438059234880 all langevin 0.000000e+00 0.000000e+00 3.000000e-06 1337
+
+dump 5625438991680 all custom 100 positions.txt id id mass q x y z
+
+
+# Run simulation
+run 100000
+
+
+# Deleting a fix
+unfix 8438059234880
+
