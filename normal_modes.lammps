@@ -27,11 +27,11 @@ pair_style coul/cut 10
 pair_coeff * *
 
 # Placing individual ions...
-create_atoms 1 single -3.4022891108931416e-08 4.9828504407469775e-08 -2.5e-05 units box
-create_atoms 1 single 4.784435563822131e-08 -3.008483476754733e-07 -1.25e-05 units box
-create_atoms 1 single 7.392445609439491e-08 1.9452231405592577e-07 0.0 units box
-create_atoms 1 single 2.660628383143808e-07 2.549490837987336e-07 1.25e-05 units box
-create_atoms 1 single -4.03246413618491e-07 -3.5716071522810253e-07 2.5e-05 units box
+create_atoms 1 single 2.6167874198040473e-07 -5.8679482046070314e-08 -2.5e-05 units box
+create_atoms 1 single -3.796968665018997e-07 -4.5819338813233456e-07 -1.25e-05 units box
+create_atoms 1 single -3.967004675242105e-07 -5.568448924224356e-08 0.0 units box
+create_atoms 1 single 3.3652616518721146e-07 7.925404404196789e-08 1.25e-05 units box
+create_atoms 1 single -3.991769048160598e-07 9.760510168189073e-08 2.5e-05 units box
 
 # Species...
 mass 1 2.83952169e-25
@@ -50,23 +50,23 @@ group nonRigidBody union all
 fix timeIntegrator nonRigidBody nve
 
 
-# Pseudopotential approximation for Linear Paul trap... (fixID=8438005611840)
+# Pseudopotential approximation for Linear Paul trap... (fixID=7404788559296)
 
 # SHO
-variable k_x8438005611840		equal 1.053450e-10
-variable k_y8438005611840		equal 1.053450e-10
-variable k_z8438005611840		equal 8.160975e-13
-variable fX8438005611840 atom "-v_k_x8438005611840 * x"
-variable fY8438005611840 atom "-v_k_y8438005611840 * y"
-variable fZ8438005611840 atom "-v_k_z8438005611840 * z"
-variable E8438005611840 atom "v_k_x8438005611840 * x * x / 2 + v_k_y8438005611840 * y * y / 2 + v_k_z8438005611840 * z * z / 2"
-fix 8438005611840 1 addforce v_fX8438005611840 v_fY8438005611840 v_fZ8438005611840 energy v_E8438005611840
+variable k_x7404788559296		equal 1.053450e-10
+variable k_y7404788559296		equal 1.053450e-10
+variable k_z7404788559296		equal 8.160975e-13
+variable fX7404788559296 atom "-v_k_x7404788559296 * x"
+variable fY7404788559296 atom "-v_k_y7404788559296 * y"
+variable fZ7404788559296 atom "-v_k_z7404788559296 * z"
+variable E7404788559296 atom "v_k_x7404788559296 * x * x / 2 + v_k_y7404788559296 * y * y / 2 + v_k_z7404788559296 * z * z / 2"
+fix 7404788559296 1 addforce v_fX7404788559296 v_fY7404788559296 v_fZ7404788559296 energy v_E7404788559296
 
 
 # Adding a langevin bath...
-fix 8438059234880 all langevin 0.000000e+00 0.000000e+00 3.000000e-06 1337
+fix 7404842223936 all langevin 0.000000e+00 0.000000e+00 3.000000e-06 1337
 
-dump 5625438991680 all custom 100 positions.txt id id mass q x y z
+dump 4936627710336 all custom 100 positions.txt id id mass q x y z
 
 
 # Run simulation
@@ -74,5 +74,5 @@ run 100000
 
 
 # Deleting a fix
-unfix 8438059234880
+unfix 7404842223936
 
