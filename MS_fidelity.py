@@ -11,7 +11,7 @@ import get_modes
 from scipy.optimize import fsolve
 from numpy import complex128, sin as sin
 from numpy import cos as cos
-
+import MS_em
 
 # Constants declaration
 ech = 1.602176634e-19  # electron charge, C
@@ -607,8 +607,8 @@ print(Alpha_function_real_1(0.999999*tau, 0),
 print(radial_freqs, offset)
 N = ion_number - 1
 P = 2*N+1
-excluded_mode = np.argsort(np.abs(radial_freqs-offset))[-(ion_number-P):]
-print(np.argsort(np.abs(radial_freqs-offset))[-(ion_number-P):])
+excluded_mode = np.argsort(np.abs(radial_freqs-offset))[-(ion_number-N):]
+print(np.argsort(np.abs(radial_freqs-offset))[-(ion_number-N):])
 
 C_full = np.zeros((ion_number, P), dtype=complex128)
 D_excluding_modes = np.zeros((P, P))
@@ -637,7 +637,7 @@ for i in range(N):
             )
         ) * LD_parameter[i, 0]
 considered_modes = np.delete(np.arange(ion_number), excluded_mode)
-C_excluding_modes = C_full[:N, :]
+C_excluding_modes = C_full[considered_modes, :]
 
 for n in range(P):
     t1p = n * tau / P
@@ -767,18 +767,18 @@ def equations(omega1):
 
 
 omega1 = fsolve(equations, np.arange(P))
-if np.dot(omega, (np.dot(D_excluding_modes, omega1))) < 0:
+if np.dot(omega1, (np.dot(D_excluding_modes, omega1))) < 0:
     omega1 = omega1 * \
         (-np.pi * 7 / (4 * np.dot(omega1, (np.dot(D_excluding_modes, omega1))))) ** 0.5
 else:
     omega1 = omega1 * \
-        (np.pi / (4 * np.dot(omega, (np.dot(D_excluding_modes, omega1))))) ** 0.5
+        (np.pi / (4 * np.dot(omega1, (np.dot(D_excluding_modes, omega1))))) ** 0.5
 print(omega1)
 
 
 def omega1_function(t): return np.piecewise(
     t, [((i * tau / P <= t) & (t < (i + 1) * tau / P))
-        for i in range(P)], omega
+        for i in range(P)], omega1
 )
 
 
@@ -789,7 +789,7 @@ def Alpha_function_real_1_excluding_modes(t, mode):
             if t < (i + 1) * tau / P:
                 t1 = i * tau / P
                 return sum(
-                    C_full.real[mode, j] * omega[j] for j in range(i)
+                    C_full.real[mode, j] * omega1[j] for j in range(i)
                 ) + omega1_function(t) * LD_parameter[mode, 0] * (
                     offset * cos(offset * t) * cos(t * w) /
                     (-(offset ** 2) + w ** 2)
@@ -811,7 +811,7 @@ def Alpha_function_imag_1_excluding_modes(t, mode):
             if t < (i + 1) * tau / P:
                 t1 = i * tau / P
                 return sum(
-                    C_full.imag[mode, j] * omega[j] for j in range(i)
+                    C_full.imag[mode, j] * omega1[j] for j in range(i)
                 ) + omega1_function(t) * LD_parameter[mode, 0] * (
                     offset * sin(t * w) * cos(offset * t) /
                     (-(offset ** 2) + w ** 2)
@@ -857,14 +857,28 @@ print(Alpha_function_real_1_excluding_modes(0.9999999*tau, 4),
 phonon_number = 10
 
 betta = 1/(np.tanh(1/5*np.log(1+1/phonon_number)))
-G_1 = np.exp(-sum(Alpha_function_imag_1(0.99999*tau, a)**2 +
-                  Alpha_function_real_1(tau*0.99999, a)**2 for a in range(ion_number))*betta/2)
-G_2 = np.exp(-sum((Alpha_function_imag_1(0.99999*tau, a)**2 +
-                   Alpha_function_real_1(tau*0.99999, a)**2)*(LD_parameter[a, 1]/LD_parameter[a, 0])**2 for a in range(ion_number))*betta/2)
-G_plus = np.exp(-sum((Alpha_function_imag_1(0.99999*tau, a)**2+Alpha_function_real_1(tau*0.99999, a)
+G_1 = np.exp(-sum(Alpha_function_imag_1(0.9999999*tau, a)**2 +
+                  Alpha_function_real_1(tau*0.9999999, a)**2 for a in range(ion_number))*betta/2)
+G_2 = np.exp(-sum((Alpha_function_imag_1(0.9999999*tau, a)**2 +
+                   Alpha_function_real_1(tau*0.9999999, a)**2)*(LD_parameter[a, 1]/LD_parameter[a, 0])**2 for a in range(ion_number))*betta/2)
+G_plus = np.exp(-sum((Alpha_function_imag_1(0.9999999*tau, a)**2+Alpha_function_real_1(tau*0.9999999, a)
                 ** 2)*(1+LD_parameter[a, 1]/LD_parameter[a, 0])**2 for a in range(ion_number))*betta/2)
-G_minus = np.exp(-sum((Alpha_function_imag_1(0.99999*tau, a)**2+Alpha_function_real_1(tau*0.99999, a)
+G_minus = np.exp(-sum((Alpha_function_imag_1(0.9999999*tau, a)**2+Alpha_function_real_1(tau*0.9999999, a)
                        ** 2)*(1-LD_parameter[a, 1]/LD_parameter[a, 0])**2 for a in range(ion_number))*betta/2)
 
 Fidelity = 1/8*(2+2*(G_1+G_2)+G_plus+G_minus)
 print(Fidelity)
+
+G_1_excluding_modes = np.exp(-sum(Alpha_function_imag_1_excluding_modes(0.9999999*tau, a)**2 +
+                                  Alpha_function_real_1_excluding_modes(tau*0.9999999, a)**2 for a in range(ion_number))*betta/2)
+G_2_excluding_modes = np.exp(-sum((Alpha_function_imag_1_excluding_modes(0.9999999*tau, a)**2 +
+                                   Alpha_function_real_1_excluding_modes(tau*0.9999999, a)**2)*(LD_parameter[a, 1]/LD_parameter[a, 0])**2 for a in range(ion_number))*betta/2)
+G_plus_excluding_modes = np.exp(-sum((Alpha_function_imag_1_excluding_modes(0.9999999*tau, a)**2+Alpha_function_real_1_excluding_modes(tau*0.9999999, a)
+                                      ** 2)*(1+LD_parameter[a, 1]/LD_parameter[a, 0])**2 for a in range(ion_number))*betta/2)
+G_minus_excluding_modes = np.exp(-sum((Alpha_function_imag_1_excluding_modes(0.9999999*tau, a)**2+Alpha_function_real_1_excluding_modes(tau*0.9999999, a)
+                                       ** 2)*(1-LD_parameter[a, 1]/LD_parameter[a, 0])**2 for a in range(ion_number))*betta/2)
+
+print(1/8*(2+2*(G_1_excluding_modes+G_2_excluding_modes) +
+      G_plus_excluding_modes+G_minus_excluding_modes))
+
+print(MS_em.Fidelity(radial_freqs, LD_parameter, offset, tau, ion_number))
