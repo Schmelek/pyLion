@@ -114,10 +114,12 @@ def axial_hessian_matrix(
             * (axial_freqs[arg_ref][0] * 2 * np.pi) ** 2
         )
     ) ** (1 / 3)
-    energy_norm = ions_mass[arg_ref][0] * (axial_freqs[arg_ref][0] * 2 * np.pi) ** 2
+    energy_norm = ions_mass[arg_ref][0] * \
+        (axial_freqs[arg_ref][0] * 2 * np.pi) ** 2
     ion_positions = np.array(ion_positions) / l
     A_matrix = (
-        np.diag(ions_mass * (axial_freqs + np.array(tweezer)) ** 2 * 4 * np.pi ** 2)
+        np.diag(ions_mass * (axial_freqs**2 +
+                np.array(tweezer)**2) * 4 * np.pi ** 2)
         / energy_norm
     )
     for i in range(ion_number):
@@ -187,10 +189,12 @@ def radial_hessian_matrix(
         )
     ) ** (1 / 3)
     print(l)
-    energy_norm = ions_mass[arg_ref][0] * (axial_freqs[arg_ref][0] * 2 * np.pi) ** 2
+    energy_norm = ions_mass[arg_ref][0] * \
+        (axial_freqs[arg_ref][0] * 2 * np.pi) ** 2
     ion_positions = np.array(ion_positions) / l
     B_matrix = (
-        np.diag(ions_mass * (radial_freqs + np.array(tweezer)) ** 2 * 4 * np.pi ** 2)
+        np.diag(ions_mass * (radial_freqs**2 +
+                np.array(tweezer)**2) * 4 * np.pi ** 2)
         / energy_norm
     )
     for i in range(ion_number):
@@ -376,7 +380,8 @@ def simulation_run(
     if min_axial_distance * 1e-3 > max_radial_variation:
         print("Ion crystal is linear.")
     else:
-        raise Exception("Ion crystal is not linear. Mode structure will be incorrect!")
+        raise Exception(
+            "Ion crystal is not linear. Mode structure will be incorrect!")
 
     timestep = simulation_name.attrs["timestep"]
 
@@ -397,7 +402,8 @@ def comprehensive_plot(
 
     tmp = np.max(ions_order) + 1
     color_column = np.linspace(0.1, 0.8, tmp).reshape(tmp, 1)
-    color_map_unit = np.hstack((np.zeros((tmp, 1)), color_column, color_column))
+    color_map_unit = np.hstack(
+        (np.zeros((tmp, 1)), color_column, color_column))
     color_map = color_map_unit[ions_order]
     fig.add_subplot(grid[0, 0:])
     plt.scatter(final_z, final_x, c=color_map)
@@ -518,4 +524,3 @@ def get_modes(
     # )
 
     return (radial_modes, radial_freqs, axial_modes, axial_freqs)
-

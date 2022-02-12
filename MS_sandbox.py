@@ -2,10 +2,14 @@ import pylion as pl
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy
+from sympy import rad
 import get_modes
 from numpy import complex128, sin as sin
 from numpy import cos as cos
 from scipy.linalg import eig
+import time
+from mpl_toolkits.mplot3d.axes3d import Axes3D
+
 
 # Constants declaration
 ech = 1.602176634e-19  # electron charge, C
@@ -19,11 +23,10 @@ hbar = 1.054571817e-34
 
 
 # Declaration of ion types used in the simulation
-ion_types = [{"mass": 171, "charge": 1}]
+ion_types = [{"mass": 171, "charge": 1}, {"mass": 138, "charge": 1}]
 # Ions ordering. You should place ion type number from the previous list in a desired order.
-ions_order = [0] * 5
-tw = 1e6
-tweezer = [0] * 5
+ions_order = [0] * 4+[1]
+
 ions_order = np.array(ions_order)
 ion_number = ions_order.shape[0]
 # Initial distance between two neighboring ions
@@ -41,8 +44,11 @@ RF_frequency = 20.83e6  # in Hz
 reference_ion_type = 0  # number of ion's type for each frequencies are defined
 
 # If you want to operate with secular frequencies, but not voltages, uncomment block bellow
-w_z = 2.7e5  # axial secular frequency in Hz
-w_r = 3.0692e6  # radial secular frequency in Hz
+w_z = 1.6e5  # axial secular frequency in Hz
+w_r = 3.06e6  # radial secular frequency in Hz
+
+tw = np.sqrt(171/138-1)*w_r
+tweezer = [0] * 4+[0]
 
 DC_voltage, RF_voltage = get_modes.frequency_to_voltage(
     w_z, w_r, ion_types[reference_ion_type], RF_frequency, Z0, R0_eff, kappa
@@ -86,15 +92,16 @@ l = ((1 * ech) ** 2 / (171 * amu * 4 * np.pi * eps0 * (w_z * 2 * np.pi) ** 2)) *
 )
 
 radial_freqs = radial_freqs[::-1] * w_z * 2 * np.pi
+# radial_freqs = np.array([3.403, 3.062, 3.056, 3.048, 3.039])*1e6*2*np.pi
 radial_modes = -radial_modes[::-1, :]
 
-P = 9
+P = 5
 N = ion_number
-offset = 19260000
-tau = 240e-6
+offset = 3.044e6*2*np.pi
+tau = 200e-6
 
 LD_parameter = np.zeros((ion_number, 2))
-ions = [0, 1]  # mind that in python numbers begin with 0!
+ions = [0, 4]  # mind that in python numbers begin with 0!
 for i in range(ion_number):
     for j in range(2):
         LD_parameter[i, j] = (
@@ -108,12 +115,10 @@ for i in range(ion_number):
             )
             ** 0.5
         ) * radial_modes[i, ions[j]]
-S = 1000
-offset_array = np.linspace(1.87e7, 19360000, S)
-fidelity_array = np.zeros(S)
+S = 100
 
-for step in range(S):
-    offset = offset_array[step]
+
+def fidelity(offset, LD_parameter, tau, radial_freqs, P):
     C1 = np.zeros((N, P), dtype=complex128)
     for i in range(N):
         for j in range(P):
@@ -142,11 +147,10 @@ for step in range(S):
                 )
             ) * LD_parameter[i, 0]
 
-    phonon_number = 5
-    betta = 1/(np.tanh(1/5*np.log(1+1/phonon_number)))
+    phonon_number = 1
+    betta = 1/(np.tanh(1/2*np.log(1+1/phonon_number)))
     B = 1/4*sum(np.dot(np.conjugate(np.reshape(C1[k, :], (P, 1))), np.reshape(C1[k, :], (1, P)))*(
         1+(LD_parameter[k, 1]/LD_parameter[k, 0])**2) for k in range(N))*betta
-
     D = np.zeros((P, P))
     for n in range(P):
         t1p = n * tau / P
@@ -500,8 +504,7 @@ for step in range(S):
 
     alpha = np.dot(C1, eigvectors)
 
-    phonon_number = 5
-    betta = 1/(np.tanh(1/5*np.log(1+1/phonon_number)))
+    betta = 1/(np.tanh(1/2*np.log(1+1/phonon_number)))
     fidelity = np.zeros(P)
     for i in range(P):
         G_1 = np.exp(-sum(np.abs(alpha[k, i]) **
@@ -516,12 +519,60 @@ for step in range(S):
 
     omega = eigvectors[:, np.argmax(fidelity)]
 
-    fidelity_array[step] = np.max(fidelity)
+    return omega, np.max(fidelity)
 
-plt.plot(offset_array, fidelity_array)
-for i in range(ion_number):
-    plt.axvline(x=radial_freqs[i], c='r')
-plt.grid()
-plt.xlabel("Offset, Hz")
-plt.ylabel("Fidelity")
-plt.show()
+
+start_time = time.time()
+fidelity_matrix = np.zeros(S)
+offset_array = np.linspace(3.02e6*2*np.pi, 3.5e6*2*np.pi, S)
+tau_array = np.linspace(100e-6, 300e-6, S)
+_, fid = fidelity(offset, LD_parameter, tau, radial_freqs, P)
+
+# for i in range(S):
+#     # for j in range(S):
+#     _, fidelity_matrix[i] = fidelity(
+#         offset_array[i], LD_parameter, tau, radial_freqs, P)
+# print("--- %s seconds ---" % (time.time() - start_time))
+
+
+# fig = plt.figure()
+# x, y = np.meshgrid(offset_array, tau_array)
+# ax = Axes3D(fig)
+# ax.plot_surface(x, y, -np.log(1-fidelity_matrix),
+#                 rstride=1, cstride=1, cmap='hot')
+# ax.set_xlabel('offset')
+# ax.set_ylabel('tau')
+# ax.set_zlabel('fidelity')
+# plt.show()
+
+
+# best_offset = offset_array[np.unravel_index(
+#     np.argmax(fidelity_matrix, axis=None), fidelity_matrix.shape)[0]]
+# best_tau = tau_array[np.unravel_index(
+#     np.argmax(fidelity_matrix, axis=None), fidelity_matrix.shape)[1]]
+
+# print("Best fidelity = ", np.max(fidelity_matrix))
+# print("Best offset = ", best_offset)
+# print("Best tau = ", best_tau)
+
+# plt.imshow(-np.log(1-fidelity_matrix), cmap="bwr")
+# plt.xlabel("Offset")
+# plt.colorbar()
+# plt.ylabel("Tau")
+# plt.show()
+
+
+# print(np.max(fidelity_matrix))
+# print(offset_array[np.argmax(fidelity_matrix)]/(2*np.pi))
+# print(radial_freqs/(np.pi*2))
+
+# omega, _ = fidelity(offset_array[np.argmax(
+#     fidelity_matrix)], LD_parameter, tau, radial_freqs, P)
+# print(omega)
+# plt.bar(np.arange(P), omega/(2*np.pi), color="b")
+# plt.grid()
+# plt.show()
+
+get_modes.comprehensive_plot(
+    ions_order, data, radial_modes, axial_modes, radial_freqs, axial_freqs, tweezer)
+print(radial_modes)

@@ -19,7 +19,7 @@ atom_style charge
 # Creating simulation box...
 boundary m m m
 region simulationDomain block -0.001  0.001 -0.001 0.001 -0.001 0.001 units box
-create_box 1 simulationDomain
+create_box 2 simulationDomain
 Created orthogonal box = (-0.001 -0.001 -0.001) to (0.001 0.001 0.001)
   1 by 1 by 1 MPI processor grid
 
@@ -32,23 +32,19 @@ pair_style coul/cut 10
 pair_coeff * *
 
 # Placing individual ions...
-create_atoms 1 single 2.3388264010081004e-07 4.977395541132498e-07 -2.5e-05 units box
+create_atoms 1 single 2.647512739477027e-07 2.846375588461556e-07 -2.5e-05 units box
 Created 1 atoms
   using box units in orthogonal box = (-0.001 -0.001 -0.001) to (0.001 0.001 0.001)
   create_atoms CPU = 0.000 seconds
-create_atoms 1 single 3.876755238046847e-07 3.8696539105678317e-07 -1.25e-05 units box
+create_atoms 1 single 1.8054747875040954e-07 4.435786762516762e-07 -1.25e-05 units box
 Created 1 atoms
   using box units in orthogonal box = (-0.001 -0.001 -0.001) to (0.001 0.001 0.001)
   create_atoms CPU = 0.000 seconds
-create_atoms 1 single -8.089260133050413e-08 -3.872810802379729e-07 0.0 units box
+create_atoms 1 single 3.021627687779331e-07 -1.2567209400827804e-07 0.0 units box
 Created 1 atoms
   using box units in orthogonal box = (-0.001 -0.001 -0.001) to (0.001 0.001 0.001)
   create_atoms CPU = 0.000 seconds
-create_atoms 1 single -4.0316322401620693e-07 -6.892643405074982e-08 1.25e-05 units box
-Created 1 atoms
-  using box units in orthogonal box = (-0.001 -0.001 -0.001) to (0.001 0.001 0.001)
-  create_atoms CPU = 0.000 seconds
-create_atoms 1 single 3.3812815464898325e-07 -3.704028015650562e-08 2.5e-05 units box
+create_atoms 1 single 4.824769693706113e-07 -1.8853034285280866e-07 1.25e-05 units box
 Created 1 atoms
   using box units in orthogonal box = (-0.001 -0.001 -0.001) to (0.001 0.001 0.001)
   create_atoms CPU = 0.000 seconds
@@ -57,11 +53,24 @@ Created 1 atoms
 mass 1 2.83952169e-25
 set type 1 charge 1.6021764599999998e-19
 Setting atom values ...
-  5 settings made for charge
+  4 settings made for charge
 group 1 type 1
-5 atoms in group 1
+4 atoms in group 1
 
-timestep 5.190930493070496e-09
+create_atoms 2 single -1.454484492019521e-07 3.2991912295153e-07 2.5e-05 units box
+Created 1 atoms
+  using box units in orthogonal box = (-0.001 -0.001 -0.001) to (0.001 0.001 0.001)
+  create_atoms CPU = 0.000 seconds
+
+# Species...
+mass 2 2.29154382e-25
+set type 2 charge 1.6021764599999998e-19
+Setting atom values ...
+  1 settings made for charge
+group 2 type 2
+1 atoms in group 2
+
+timestep 4.201206739952918e-09
 
 # Configuring additional output to flush buffer during simulation...
 thermo 10000
@@ -74,28 +83,41 @@ group nonRigidBody union all
 fix timeIntegrator nonRigidBody nve
 
 
-# Pseudopotential approximation for Linear Paul trap... (fixID=4156898393632)
+# Pseudopotential approximation for Linear Paul trap... (fixID=6640788769456)
 
 # SHO
-variable k_x4156898393632		equal 1.053450e-10
-variable k_y4156898393632		equal 1.053450e-10
-variable k_z4156898393632		equal 8.160975e-13
-variable fX4156898393632 atom "-v_k_x4156898393632 * x"
-variable fY4156898393632 atom "-v_k_y4156898393632 * y"
-variable fZ4156898393632 atom "-v_k_z4156898393632 * z"
-variable E4156898393632 atom "v_k_x4156898393632 * x * x / 2 + v_k_y4156898393632 * y * y / 2 + v_k_z4156898393632 * z * z / 2"
-fix 4156898393632 1 addforce v_fX4156898393632 v_fY4156898393632 v_fZ4156898393632 energy v_E4156898393632
+variable k_x6640788769456		equal 1.047146e-10
+variable k_y6640788769456		equal 1.047146e-10
+variable k_z6640788769456		equal 2.865857e-13
+variable fX6640788769456 atom "-v_k_x6640788769456 * x"
+variable fY6640788769456 atom "-v_k_y6640788769456 * y"
+variable fZ6640788769456 atom "-v_k_z6640788769456 * z"
+variable E6640788769456 atom "v_k_x6640788769456 * x * x / 2 + v_k_y6640788769456 * y * y / 2 + v_k_z6640788769456 * z * z / 2"
+fix 6640788769456 1 addforce v_fX6640788769456 v_fY6640788769456 v_fZ6640788769456 energy v_E6640788769456
+
+
+# Pseudopotential approximation for Linear Paul trap... (fixID=6640870354800)
+
+# SHO
+variable k_x6640870354800		equal 1.297894e-10
+variable k_y6640870354800		equal 1.297894e-10
+variable k_z6640870354800		equal 2.865857e-13
+variable fX6640870354800 atom "-v_k_x6640870354800 * x"
+variable fY6640870354800 atom "-v_k_y6640870354800 * y"
+variable fZ6640870354800 atom "-v_k_z6640870354800 * z"
+variable E6640870354800 atom "v_k_x6640870354800 * x * x / 2 + v_k_y6640870354800 * y * y / 2 + v_k_z6640870354800 * z * z / 2"
+fix 6640870354800 2 addforce v_fX6640870354800 v_fY6640870354800 v_fZ6640870354800 energy v_E6640870354800
 
 
 # Adding a langevin bath...
-fix 4156955739104 all langevin 0.000000e+00 0.000000e+00 3.000000e-06 1337
+fix 6640719040272 all langevin 0.000000e+00 0.000000e+00 3.000000e-06 1337
 
-dump 2771367970336 all custom 100 positions.txt id id mass q x y z
+dump 4427219740144 all custom 100 positions.txt id id mass q x y z
 
 
 # Run simulation
 run 100000
-  generated 0 of 0 mixed pair_coeff terms from geometric mixing rule
+  generated 0 of 1 mixed pair_coeff terms from geometric mixing rule
 Neighbor list info ...
   update every 1 steps, delay 10 steps, check yes
   max neighbors/atom: 2000, page size: 100000
@@ -108,32 +130,32 @@ Neighbor list info ...
       stencil: none
       bin: none
 WARNING: Proc sub-domain size < neighbor skin, could lead to lost atoms (src/domain.cpp:965)
-Per MPI rank memory allocation (min/avg/max) = 4.78 | 4.78 | 4.78 Mbytes
+Per MPI rank memory allocation (min/avg/max) = 5.28 | 5.28 | 5.28 Mbytes
 Step CPU 
        0            0 
-   10000      0.13151 
-   20000     0.260678 
-   30000     0.390753 
-   40000     0.523684 
-   50000     0.656438 
-   60000     0.785794 
-   70000      0.91474 
-   80000     1.046101 
-   90000     1.175021 
-  100000     1.305256 
-Loop time of 1.30564 on 1 procs for 100000 steps with 5 atoms
+   10000     0.250162 
+   20000     0.506332 
+   30000     0.763966 
+   40000     1.025443 
+   50000     1.273858 
+   60000     1.520201 
+   70000     1.768634 
+   80000     2.024002 
+   90000     2.269911 
+  100000       2.5486 
+Loop time of 2.54867 on 1 procs for 100000 steps with 5 atoms
 
-98.1% CPU use with 1 MPI tasks x 1 OpenMP threads
+100.5% CPU use with 1 MPI tasks x 1 OpenMP threads
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
 ---------------------------------------------------------------
-Pair    | 0.014958   | 0.014958   | 0.014958   |   0.0 |  1.15
+Pair    | 0.014307   | 0.014307   | 0.014307   |   0.0 |  0.56
 Neigh   | 0          | 0          | 0          |   0.0 |  0.00
-Comm    | 0.009853   | 0.009853   | 0.009853   |   0.0 |  0.75
-Output  | 0.022915   | 0.022915   | 0.022915   |   0.0 |  1.76
-Modify  | 1.2425     | 1.2425     | 1.2425     |   0.0 | 95.16
-Other   |            | 0.01545    |            |       |  1.18
+Comm    | 0.009929   | 0.009929   | 0.009929   |   0.0 |  0.39
+Output  | 0.022627   | 0.022627   | 0.022627   |   0.0 |  0.89
+Modify  | 2.4848     | 2.4848     | 2.4848     |   0.0 | 97.49
+Other   |            | 0.01699    |            |       |  0.67
 
 Nlocal:              5 ave           5 max           5 min
 Histogram: 1 0 0 0 0 0 0 0 0 0
@@ -149,6 +171,6 @@ Dangerous builds = 0
 
 
 # Deleting a fix
-unfix 4156955739104
+unfix 6640719040272
 
-Total wall time: 0:00:01
+Total wall time: 0:00:02
