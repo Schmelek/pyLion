@@ -27,17 +27,17 @@ pair_style coul/cut 10
 pair_coeff * *
 
 # Placing individual ions...
-create_atoms 1 single 2.647512739477027e-07 2.846375588461556e-07 -2.5e-05 units box
-create_atoms 1 single 1.8054747875040954e-07 4.435786762516762e-07 -1.25e-05 units box
-create_atoms 1 single 3.021627687779331e-07 -1.2567209400827804e-07 0.0 units box
-create_atoms 1 single 4.824769693706113e-07 -1.8853034285280866e-07 1.25e-05 units box
+create_atoms 1 single -3.6153324740378564e-07 -2.376469949127391e-07 -2.5e-05 units box
+create_atoms 1 single -3.6479369652435023e-07 2.463990251185293e-07 -1.25e-05 units box
+create_atoms 1 single 1.6576157529463664e-07 -2.3267603560636284e-07 0.0 units box
+create_atoms 1 single 2.6030748467187946e-07 1.8404824571099474e-07 1.25e-05 units box
 
 # Species...
 mass 1 2.83952169e-25
 set type 1 charge 1.6021764599999998e-19
 group 1 type 1
 
-create_atoms 2 single -1.454484492019521e-07 3.2991912295153e-07 2.5e-05 units box
+create_atoms 2 single 4.861171062121496e-07 -1.6624097510892532e-07 2.5e-05 units box
 
 # Species...
 mass 2 2.29154382e-25
@@ -56,36 +56,36 @@ group nonRigidBody union all
 fix timeIntegrator nonRigidBody nve
 
 
-# Pseudopotential approximation for Linear Paul trap... (fixID=6640788769456)
+# Pseudopotential approximation for Linear Paul trap... (fixID=9310881481936)
 
 # SHO
-variable k_x6640788769456		equal 1.047146e-10
-variable k_y6640788769456		equal 1.047146e-10
-variable k_z6640788769456		equal 2.865857e-13
-variable fX6640788769456 atom "-v_k_x6640788769456 * x"
-variable fY6640788769456 atom "-v_k_y6640788769456 * y"
-variable fZ6640788769456 atom "-v_k_z6640788769456 * z"
-variable E6640788769456 atom "v_k_x6640788769456 * x * x / 2 + v_k_y6640788769456 * y * y / 2 + v_k_z6640788769456 * z * z / 2"
-fix 6640788769456 1 addforce v_fX6640788769456 v_fY6640788769456 v_fZ6640788769456 energy v_E6640788769456
+variable k_x9310881481936		equal 1.047146e-10
+variable k_y9310881481936		equal 1.047146e-10
+variable k_z9310881481936		equal 2.865857e-13
+variable fX9310881481936 atom "-v_k_x9310881481936 * x"
+variable fY9310881481936 atom "-v_k_y9310881481936 * y"
+variable fZ9310881481936 atom "-v_k_z9310881481936 * z"
+variable E9310881481936 atom "v_k_x9310881481936 * x * x / 2 + v_k_y9310881481936 * y * y / 2 + v_k_z9310881481936 * z * z / 2"
+fix 9310881481936 1 addforce v_fX9310881481936 v_fY9310881481936 v_fZ9310881481936 energy v_E9310881481936
 
 
-# Pseudopotential approximation for Linear Paul trap... (fixID=6640870354800)
+# Pseudopotential approximation for Linear Paul trap... (fixID=9310963051728)
 
 # SHO
-variable k_x6640870354800		equal 1.297894e-10
-variable k_y6640870354800		equal 1.297894e-10
-variable k_z6640870354800		equal 2.865857e-13
-variable fX6640870354800 atom "-v_k_x6640870354800 * x"
-variable fY6640870354800 atom "-v_k_y6640870354800 * y"
-variable fZ6640870354800 atom "-v_k_z6640870354800 * z"
-variable E6640870354800 atom "v_k_x6640870354800 * x * x / 2 + v_k_y6640870354800 * y * y / 2 + v_k_z6640870354800 * z * z / 2"
-fix 6640870354800 2 addforce v_fX6640870354800 v_fY6640870354800 v_fZ6640870354800 energy v_E6640870354800
+variable k_x9310963051728		equal 1.297894e-10
+variable k_y9310963051728		equal 1.297894e-10
+variable k_z9310963051728		equal 2.865857e-13
+variable fX9310963051728 atom "-v_k_x9310963051728 * x"
+variable fY9310963051728 atom "-v_k_y9310963051728 * y"
+variable fZ9310963051728 atom "-v_k_z9310963051728 * z"
+variable E9310963051728 atom "v_k_x9310963051728 * x * x / 2 + v_k_y9310963051728 * y * y / 2 + v_k_z9310963051728 * z * z / 2"
+fix 9310963051728 2 addforce v_fX9310963051728 v_fY9310963051728 v_fZ9310963051728 energy v_E9310963051728
 
 
 # Adding a langevin bath...
-fix 6640719040272 all langevin 0.000000e+00 0.000000e+00 3.000000e-06 1337
+fix 9310812901936 all langevin 0.000000e+00 0.000000e+00 3.000000e-06 1337
 
-dump 4427219740144 all custom 100 positions.txt id id mass q x y z
+dump 6207281422736 all custom 100 positions.txt id id mass q x y z
 
 
 # Run simulation
@@ -93,5 +93,5 @@ run 100000
 
 
 # Deleting a fix
-unfix 6640719040272
+unfix 9310812901936
 

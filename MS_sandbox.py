@@ -1,3 +1,4 @@
+from turtle import shape
 import pylion as pl
 import matplotlib.pyplot as plt
 import numpy as np
@@ -25,7 +26,7 @@ hbar = 1.054571817e-34
 # Declaration of ion types used in the simulation
 ion_types = [{"mass": 171, "charge": 1}, {"mass": 138, "charge": 1}]
 # Ions ordering. You should place ion type number from the previous list in a desired order.
-ions_order = [0] * 4+[1]
+ions_order = [0]*4+[1]
 
 ions_order = np.array(ions_order)
 ion_number = ions_order.shape[0]
@@ -47,9 +48,8 @@ reference_ion_type = 0  # number of ion's type for each frequencies are defined
 w_z = 1.6e5  # axial secular frequency in Hz
 w_r = 3.06e6  # radial secular frequency in Hz
 
-tw = np.sqrt(171/138-1)*w_r
-tweezer = [0] * 4+[0]
-
+tw = np.sqrt((171/138)**2-1)*w_r
+tweezer = [0]*4+[0]
 DC_voltage, RF_voltage = get_modes.frequency_to_voltage(
     w_z, w_r, ion_types[reference_ion_type], RF_frequency, Z0, R0_eff, kappa
 )
@@ -90,10 +90,11 @@ final_z = np.sort(final_z)
 l = ((1 * ech) ** 2 / (171 * amu * 4 * np.pi * eps0 * (w_z * 2 * np.pi) ** 2)) ** (
     1 / 3
 )
+print(final_z)
 
-radial_freqs = radial_freqs[::-1] * w_z * 2 * np.pi
+radial_freqs = radial_freqs * w_z * 2 * np.pi
+axial_freqs = axial_freqs*w_z*2*np.pi
 # radial_freqs = np.array([3.403, 3.062, 3.056, 3.048, 3.039])*1e6*2*np.pi
-radial_modes = -radial_modes[::-1, :]
 
 P = 5
 N = ion_number
@@ -115,7 +116,7 @@ for i in range(ion_number):
             )
             ** 0.5
         ) * radial_modes[i, ions[j]]
-S = 100
+S = 1000
 
 
 def fidelity(offset, LD_parameter, tau, radial_freqs, P):
@@ -147,7 +148,7 @@ def fidelity(offset, LD_parameter, tau, radial_freqs, P):
                 )
             ) * LD_parameter[i, 0]
 
-    phonon_number = 1
+    phonon_number = 10
     betta = 1/(np.tanh(1/2*np.log(1+1/phonon_number)))
     B = 1/4*sum(np.dot(np.conjugate(np.reshape(C1[k, :], (P, 1))), np.reshape(C1[k, :], (1, P)))*(
         1+(LD_parameter[k, 1]/LD_parameter[k, 0])**2) for k in range(N))*betta
@@ -522,57 +523,37 @@ def fidelity(offset, LD_parameter, tau, radial_freqs, P):
     return omega, np.max(fidelity)
 
 
+omega_matrix = np.zeros((P, S))
 start_time = time.time()
 fidelity_matrix = np.zeros(S)
-offset_array = np.linspace(3.02e6*2*np.pi, 3.5e6*2*np.pi, S)
+offset_array = np.linspace(3.0e6*2*np.pi, 3.9e6*2*np.pi, S)
 tau_array = np.linspace(100e-6, 300e-6, S)
-_, fid = fidelity(offset, LD_parameter, tau, radial_freqs, P)
 
 # for i in range(S):
 #     # for j in range(S):
-#     _, fidelity_matrix[i] = fidelity(
+#     omega_matrix[:, i], fidelity_matrix[i] = fidelity(
 #         offset_array[i], LD_parameter, tau, radial_freqs, P)
 # print("--- %s seconds ---" % (time.time() - start_time))
 
-
-# fig = plt.figure()
-# x, y = np.meshgrid(offset_array, tau_array)
-# ax = Axes3D(fig)
-# ax.plot_surface(x, y, -np.log(1-fidelity_matrix),
-#                 rstride=1, cstride=1, cmap='hot')
-# ax.set_xlabel('offset')
-# ax.set_ylabel('tau')
-# ax.set_zlabel('fidelity')
-# plt.show()
+# tmp = np.zeros(S)
+# for i in range(S):
+#     tmp[i] = np.max(np.abs(omega_matrix[:, i]))
+# ind = np.where((tmp/(2*np.pi) < 9e5) & (tmp/(2*np.pi) > 1e5))[0]
 
 
-# best_offset = offset_array[np.unravel_index(
-#     np.argmax(fidelity_matrix, axis=None), fidelity_matrix.shape)[0]]
-# best_tau = tau_array[np.unravel_index(
-#     np.argmax(fidelity_matrix, axis=None), fidelity_matrix.shape)[1]]
-
-# print("Best fidelity = ", np.max(fidelity_matrix))
-# print("Best offset = ", best_offset)
-# print("Best tau = ", best_tau)
-
-# plt.imshow(-np.log(1-fidelity_matrix), cmap="bwr")
-# plt.xlabel("Offset")
-# plt.colorbar()
-# plt.ylabel("Tau")
-# plt.show()
+# omega, fid = fidelity(offset_array[ind[np.argmax(
+#     fidelity_matrix[ind])]], LD_parameter, tau, radial_freqs, P)
 
 
-# print(np.max(fidelity_matrix))
-# print(offset_array[np.argmax(fidelity_matrix)]/(2*np.pi))
-# print(radial_freqs/(np.pi*2))
-
-# omega, _ = fidelity(offset_array[np.argmax(
-#     fidelity_matrix)], LD_parameter, tau, radial_freqs, P)
-# print(omega)
+# print("Fidelity", fid)
+# print("Radial frequencies", radial_freqs/(2*np.pi))
+# print("Offset", 3795495.4954954954)
+# print("Omega", omega/(2*np.pi))
+# print("Tweezer frequency", tw)
 # plt.bar(np.arange(P), omega/(2*np.pi), color="b")
 # plt.grid()
 # plt.show()
 
-get_modes.comprehensive_plot(
-    ions_order, data, radial_modes, axial_modes, radial_freqs, axial_freqs, tweezer)
-print(radial_modes)
+
+# get_modes.comprehensive_plot(
+#     ions_order, data, radial_modes, axial_modes, radial_freqs/(2*np.pi), axial_freqs/(2*np.pi), tweezer)

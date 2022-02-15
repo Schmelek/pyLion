@@ -230,6 +230,8 @@ def axial_normal_modes(
     tweezer,
     reference_ion_type,
 ):
+    tweezer = [0]*ion_positions.shape[0]
+
     axial_hessian, mass_matrix = axial_hessian_matrix(
         ion_positions,
         DC_voltage,
