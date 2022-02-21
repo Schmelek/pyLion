@@ -188,7 +188,6 @@ def radial_hessian_matrix(
             * (axial_freqs[arg_ref][0] * 2 * np.pi) ** 2
         )
     ) ** (1 / 3)
-    print(l)
     energy_norm = ions_mass[arg_ref][0] * \
         (axial_freqs[arg_ref][0] * 2 * np.pi) ** 2
     ion_positions = np.array(ion_positions) / l
@@ -489,7 +488,7 @@ def get_modes(
     tweezer,
     reference_ion_type,
 ):
-    timestep = simulation_run(
+    _ = simulation_run(
         ion_types, ions_order, ion_number, ions_initial_splitting, trap
     )
     _, data = pl.readdump("positions.txt")

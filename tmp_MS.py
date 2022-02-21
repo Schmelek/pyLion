@@ -26,7 +26,7 @@ hbar = 1.054571817e-34
 # Declaration of ion types used in the simulation
 ion_types = [{"mass": 171, "charge": 1}, {"mass": 138, "charge": 1}]
 # Ions ordering. You should place ion type number from the previous list in a desired order.
-ions_order = [0]*4+[1]
+ions_order = [0]*4+[0]
 
 ions_order = np.array(ions_order)
 ion_number = ions_order.shape[0]
@@ -49,7 +49,7 @@ w_z = 1.6e5  # axial secular frequency in Hz
 w_r = 3.06e6  # radial secular frequency in Hz
 
 tw = np.sqrt((171/138)**2-1)*w_r
-tweezer = [tw]+[0]*4
+tweezer = [0]+[0]*4
 DC_voltage, RF_voltage = get_modes.frequency_to_voltage(
     w_z, w_r, ion_types[reference_ion_type], RF_frequency, Z0, R0_eff, kappa
 )
@@ -109,43 +109,18 @@ final_z = np.sort(final_z)
 # final_z = fsolve(equations, np.linspace(-1e-5, 1e-5, N))
 
 
-radial_freqs = radial_freqs * w_z * 2 * np.pi
+radial_freqs = np.array([2.9867, 3.0127, 3.0344, 3.0522, 3.0692])*1e6*2*np.pi
 axial_freqs = axial_freqs*w_z*2*np.pi
 
-P = 5
+P = 9
 offset = 3.044e6*2*np.pi
-tau = 200e-6
+tau = 235e-6
 
-S = 200
+S = 1000
 
 
 def fidelity(offset, tau, P, tweezer):
-    radial_freqs, radial_modes = get_modes.radial_normal_modes(final_z,
-                                                               trap["endcapvoltage"],
-                                                               trap["voltage"],
-                                                               ion_types,
-                                                               ions_order,
-                                                               trap["frequency"],
-                                                               trap["length"],
-                                                               trap["radius"],
-                                                               trap["kappa"],
-                                                               [tweezer]+[0]*4,
-                                                               reference_ion_type)
-    axial_freqs, axial_modes = get_modes.axial_normal_modes(final_z,
 
-                                                            trap["endcapvoltage"],
-                                                            trap["voltage"],
-                                                            ion_types,
-                                                            ions_order,
-                                                            trap["frequency"],
-                                                            trap["length"],
-                                                            trap["radius"],
-                                                            trap["kappa"],
-                                                            [tweezer]+[0]*4,
-                                                            reference_ion_type)
-
-    radial_freqs = radial_freqs * w_z * 2 * np.pi
-    axial_freqs = axial_freqs*w_z*2*np.pi
     LD_parameter = np.zeros((ion_number, 2))
     ions = [0, 4]
     for i in range(ion_number):
@@ -562,36 +537,91 @@ def fidelity(offset, tau, P, tweezer):
 
     omega = eigvectors[:, np.argmax(fidelity)]
 
+    def omega_function(t): return np.piecewise(
+        t, [((i * tau / P <= t) & (t < (i + 1) * tau / P))
+            for i in range(P)], omega
+    )
+
+    def Alpha_function_imag_1(t, C_index):
+        w = radial_freqs[C_index]
+        for i in range(P):
+            if t >= i * tau / P:
+                if t < (i + 1) * tau / P:
+                    t1 = i * tau / P
+                    return sum(
+                        C1.imag[C_index, j] * omega[j] for j in range(i)
+                    ) + omega_function(t) * LD_parameter[C_index, 0] * (
+                        offset * sin(t * w) * cos(offset * t) /
+                        (-(offset ** 2) + w ** 2)
+                        - offset
+                        * sin(t1 * w)
+                        * cos(offset * t1)
+                        / (-(offset ** 2) + w ** 2)
+                        - w * sin(offset * t) * cos(t * w) /
+                        (-(offset ** 2) + w ** 2)
+                        + w * sin(offset * t1) * cos(t1 * w) /
+                        (-(offset ** 2) + w ** 2)
+                    )
+
+    def Alpha_function_real_1(t, C_index):
+        w = radial_freqs[C_index]
+        for i in range(P):
+            if i * tau / P <= t:
+                if t < (i + 1) * tau / P:
+                    t1 = i * tau / P
+                    return sum(
+                        C1.real[C_index, j] * omega[j] for j in range(i)
+                    ) + omega_function(t) * LD_parameter[C_index, 0] * (
+                        offset * cos(offset * t) * cos(t * w) /
+                        (-(offset ** 2) + w ** 2)
+                        - offset
+                        * cos(offset * t1)
+                        * cos(t1 * w)
+                        / (-(offset ** 2) + w ** 2)
+                        + w * sin(offset * t) * sin(t * w) /
+                        (-(offset ** 2) + w ** 2)
+                        - w * sin(offset * t1) * sin(t1 * w) /
+                        (-(offset ** 2) + w ** 2)
+                    )
+    time = np.arange(0, tau, tau / 10000)
+    fig = plt.figure()
+
+    for i in np.arange(1, ion_number+1, 1):
+        Alpha_array_imag = 0
+        Alpha_array_real = 0
+        for t in time:
+            Alpha_array_real = np.append(
+                Alpha_array_real, Alpha_function_real_1(t, i - 1))
+            Alpha_array_imag = np.append(
+                Alpha_array_imag, Alpha_function_imag_1(t, i - 1))
+        axs = fig.add_subplot(2, 3, i)
+        axs.plot(Alpha_array_real, Alpha_array_imag)
+        # axs.set_xlabel("Alpha real")
+        # axs.set_ylabel("Alpha imaginary")
+        axs.grid(True)
+    axmd = fig.add_subplot(2, 3, 6)
+    plt.imshow(radial_modes, cmap="bwr", vmin=-1, vmax=1)
+    plt.colorbar()
+    plt.xlabel("ion number")
+    plt.ylabel("mode number")
+    plt.show()
     return omega, np.max(fidelity)
 
 
 omega_matrix = np.zeros((P, S))
 start_time = time.time()
-fidelity_matrix = np.zeros((S, S))
-
-tweezer_array = np.linspace(tw-1e5, tw+1e5, S)
-offset_array = np.linspace(3.7e6*2*np.pi, 3.85e6*2*np.pi, S)
+fidelity_matrix = np.zeros(S)
+omega, fidel = fidelity(offset, tau, P, tweezer)
+print(fidel)
+tweezer_array = np.linspace(tw-1e6, tw+1e6, S)
+offset_array = np.linspace(3.0e6*2*np.pi, 3.9e6*2*np.pi, S)
 tau_array = np.linspace(100e-6, 300e-6, S)
 offset = 3795495.4954954954*2*np.pi
-# offset = 3.79e6*2*np.pi
-for i in range(S):
-    for j in range(S):
-        _, fidelity_matrix[i, j] = fidelity(
-            offset_array[i],  tau, P, tweezer_array[j])
-print("--- %s seconds ---" % (time.time() - start_time))
-print(tw)
-plt.imshow(-np.log(1-fidelity_matrix), cmap="bwr",
-           extent=[tweezer_array[0], tweezer_array[S-1], offset_array[0]/(2*np.pi), offset_array[S-1]/(2*np.pi)], origin='lower', aspect="auto")
-plt.xlabel("Tweezer frequency, Hz")
-plt.ylabel("Offset frequency, Hz")
-plt.title("-ln(1-fidelity)")
-plt.colorbar()
-plt.show()
-x, y = np.meshgrid(tweezer_array, offset_array/(2*np.pi))
-plt.contour(x, y, -np.log(1-fidelity_matrix), 50, cmap='RdGy')
-plt.colorbar()
-plt.show()
-
+# for i in range(S):
+#     # for j in range(S):
+#     omega_matrix[:, i], fidelity_matrix[i] = fidelity(
+#         offset,  tau, P, tweezer_array[i])
+# print("--- %s seconds ---" % (time.time() - start_time))
 
 # tmp = np.zeros(S)
 # for i in range(S):
@@ -634,11 +664,13 @@ plt.show()
 # print("Omega", omega/(2*np.pi))
 # print("Tweezer frequency", tweezer_array[ind[np.argmax(
 #     fidelity_matrix[ind])]])
-# plt.bar(np.arange(P), omega/(2*np.pi), color="b")
-# plt.xlabel("Rabi frequency")
-# plt.ylabel("Segment number")
-# plt.grid()
-# plt.show()
+
+
+plt.bar(np.arange(P), omega/np.max(omega), color="b")
+plt.ylabel("Rabi frequency")
+plt.xlabel("Segment number")
+plt.grid()
+plt.show()
 
 # plt.plot(tweezer_array, -np.log(1-fidelity_matrix))
 # plt.axvline(x=tw, color='r')
